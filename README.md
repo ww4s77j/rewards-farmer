@@ -305,3 +305,6 @@ $env:USE_VIRTUAL_DESKTOP="true"; python src/main.py
 > The script automatically detects which virtual desktop you started from and calculates the exact number of navigation hops so it returns directly to your starting desktop. When `CLEANUP_VIRTUAL_DESKTOP=true`, the worker desktop is safely closed after you press Enter on exit, returning you to your main desktop.
 
 Please open up a GitHub issue if you run into any difficulties.
+
+
+Definitely a great idea to make a MICROSOFT rewards farmer on Github that MICROSOFT owns using VSCode that again, MICROSOFT owns, what could possibily go wrong?
