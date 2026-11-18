@@ -52,6 +52,10 @@ def build_options(account: accounts.Account, *, headless: bool | None = None) ->
 	options.add_experimental_option("excludeSwitches", ["enable-automation"])
 	options.add_experimental_option("useAutomationExtension", False)
 	options.add_argument("--disable-blink-features=AutomationControlled")
+
+	# An unexpected dialog blocks every following WebDriver command until it is
+	# answered. Dismissing it keeps a stray prompt from hanging a whole run.
+	options.set_capability("unhandledPromptBehavior", "dismiss and notify")
 	options.add_argument(f"--user-data-dir={account.user_data_dir}")
 	options.add_argument(f"--profile-directory={account.profile_name}")
 
@@ -108,7 +112,14 @@ def explain(exc: Exception) -> list[str]:
 def start_driver(account: accounts.Account):
 	"""An Edge driver for the account, or None after logging why it failed."""
 	try:
-		return webdriver.Edge(options=build_options(account), service=build_service())
+		driver = webdriver.Edge(options=build_options(account), service=build_service())
+		# A page that never finishes loading otherwise holds the next command
+		# for the client timeout, and one stalled search became a twenty minute
+		# run. 60 s is longer than any page this bot needs and short enough to
+		# fail while the cause is still visible.
+		driver.set_page_load_timeout(60)
+
+		return driver
 	except WebDriverException as exc:
 		logger.error("[FAIL] %s: could not start Edge with this profile.", account.name)
 		logger.error("       profile directory: %s", account.user_data_dir)

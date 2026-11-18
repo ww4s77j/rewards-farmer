@@ -72,7 +72,7 @@ The bot needs short strings to type into Bing. Two backends produce them, set wi
 
 | `QUERY_SOURCE` | Needs | Notes |
 | --- | --- | --- |
-| `llm` (default) | OpenRouter or Ollama account + model | `llm` via Ollama is the current behaviour, unchanged |
+| `llm` (default) | DeepSeek, OpenRouter or Ollama account + model | DeepSeek is used automatically when `DEEPSEEK_API_KEY` is set |
 | `trends` | nothing | Google Trends, Wikipedia and Bing autosuggest |
 
 ```sh
@@ -82,16 +82,21 @@ $env:QUERY_SOURCE="trends"; python src/main.py  # PowerShell
 
 `trends` needs no account, no API key and no model download, so the LLM setup below is optional if you use it. If every feed is unreachable it falls back to `nouns.txt` rather than failing the run.
 
-If you would like to use LLMs, you should also configure an LLM provider through a `.env` file in the project root. The script now talks to either OpenRouter or a local OpenAI-compatible LLM endpoint depending on `LLM_PROVIDER`.
+If you would like to use LLMs, you should also configure an LLM provider through a `.env` file in the project root. The script talks to DeepSeek, OpenRouter or a local OpenAI-compatible LLM endpoint depending on `LLM_PROVIDER`.
 
 A sample `nouns.txt` file is included in the project root and can be modified by the user to contain seed words for an LLM to complete 20 searches. The wordlist should be separated by newline.
 
 Example `.env` values:
 
 ```env
-LLM_PROVIDER=openrouter
-OPENROUTER_API_KEY=your_key_here
-OPENROUTER_MODEL=openai/gpt-4o-mini
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your_key_here
+DEEPSEEK_MODEL=deepseek-chat
+
+# Or use OpenRouter instead
+# LLM_PROVIDER=openrouter
+# OPENROUTER_API_KEY=your_key_here
+# OPENROUTER_MODEL=openrouter/free
 
 # Or use a local endpoint instead
 # LLM_PROVIDER=local
@@ -99,9 +104,9 @@ OPENROUTER_MODEL=openai/gpt-4o-mini
 # LOCAL_LLM_MODEL=gemma3:4b
 ```
 
-For OpenRouter, the code uses the OpenAI-compatible chat completions API at `https://openrouter.ai/api/v1/chat/completions`. For local models, the endpoint must also be OpenAI-compatible. More configuration options can be found in [`.env.example`](.env.example).
+DeepSeek and OpenRouter both use the OpenAI-compatible chat completions API, at `https://api.deepseek.com/chat/completions` and `https://openrouter.ai/api/v1/chat/completions` respectively. For local models, the endpoint must also be OpenAI-compatible. More configuration options can be found in [`.env.example`](.env.example).
 
-If the configuration options are not provided, they default to `LLM_PROVIDER=local`, `LOCAL_LLM_BASE_URL=http://localhost:11434/v1`, `LOCAL_LLM_MODEL=gemma4:cloud`, and `OPENROUTER_MODEL=openrouter/free`.
+`DEEPSEEK_API_KEY` may also be provided as an environment variable instead of in `.env`. If `LLM_PROVIDER` is not set, DeepSeek is selected when `DEEPSEEK_API_KEY` is present and `local` is used otherwise. Model defaults are `DEEPSEEK_MODEL=deepseek-chat`, `OPENROUTER_MODEL=openrouter/free`, `LOCAL_LLM_MODEL=gemma4:cloud`, and `LOCAL_LLM_BASE_URL=http://localhost:11434/v1`.
 
 You must also provide an image for the script to upload to complete the visual search task. A helper script is included at `src/random_image_for_visual_search.py` that will download an image from Wikipedia named `visual_search.jpg` into the project root for you. You may also provide an image of your own, just ensure that the absolute path of the image is placed in the `VISUAL_SEARCH_IMAGE_PATH` constant at the top of `rewards_tasks.py`.
 

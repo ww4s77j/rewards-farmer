@@ -148,10 +148,14 @@ class TestDriverEnvironment(EnvTestCase):
 
 		self.seen = {}
 
+		class FakeDriver:
+			def set_page_load_timeout(self, seconds):
+				self.page_load_timeout = seconds
+
 		def edge(options=None, service=None):
 			self.seen.update(options=options, service=service)
 
-			return object()
+			return FakeDriver()
 
 		browser.webdriver.Edge = edge
 

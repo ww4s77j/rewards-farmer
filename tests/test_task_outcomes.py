@@ -511,7 +511,8 @@ class ProgressInsideTasks(unittest.TestCase):
 			get_explore_on_bing_elements=lambda: ["card 1", "card 2", "card 3"],
 			extract_card_descriptions=lambda card: card,
 			get_bing_search_bar=lambda: "search bar",
-			card_is_complete=lambda card: True,
+			card_is_complete=lambda card: False,
+			card_is_app_promo=lambda card: False,
 		)
 		# The search bar on the third card's tab never shows up.
 		tasks.wait_for_element = failing_on(3, ElementNeverAppeared("nothing matched"))
@@ -610,7 +611,8 @@ class ProgressInsideTasks(unittest.TestCase):
 			get_explore_on_bing_elements=explore,
 			extract_card_descriptions=lambda card: card,
 			get_bing_search_bar=lambda: "search bar",
-			card_is_complete=lambda card: True,
+			card_is_complete=lambda card: False,
+			card_is_app_promo=lambda card: False,
 		)
 		tasks.wait_for_element = wait_once
 
@@ -656,7 +658,8 @@ class ProgressInsideTasks(unittest.TestCase):
 			get_explore_on_bing_elements=cards,
 			extract_card_descriptions=lambda card: card[0],
 			get_bing_search_bar=lambda: "search bar",
-			card_is_complete=lambda card: True,
+			card_is_complete=lambda card: False,
+			card_is_app_promo=lambda card: False,
 		)
 		tasks.move_to_and_click = click
 		tasks.tab_utils.close_all_other_tabs = back_on_the_earn_page
@@ -803,6 +806,7 @@ class ProgressInsideTasks(unittest.TestCase):
 			# Three reads inside the loop, the fourth is the check after it.
 			get_all_misc_cards=failing_on(4, NoSuchElementException("no cards"), value=cards),
 			card_is_complete=lambda card: False,
+			card_is_app_promo=lambda card: False,
 			get_card_point_value=lambda card: 10,
 		)
 		tasks.wait_for_element = lambda getter, timeout=10: cards
@@ -819,6 +823,7 @@ class ProgressInsideTasks(unittest.TestCase):
 			get_open_daily_set_button=lambda: "button",
 			get_daily_set_elements=lambda: ["a", "b", "c"],
 			get_daily_set_element_by_index=lambda index: "activity",
+			daily_set_done_today=lambda tile: False,
 		)
 		tasks.wait_for_then_click = lambda getter, timeout=10: None
 		tasks.wait_for_element = lambda getter, timeout=10: getter()
@@ -833,15 +838,13 @@ class ProgressInsideTasks(unittest.TestCase):
 		def no_activities():
 			raise NoSuchElementException("no daily set activities")
 
-		def panel_never_fills(getter, timeout=10):
-			raise TimeoutException("Message: ")
-
 		tasks = self._tasks(
 			get_open_daily_set_button=lambda: "button",
 			get_daily_set_elements=no_activities,
+			daily_set_done_today=lambda tile: False,
 		)
 		tasks.wait_for_then_click = lambda getter, timeout=10: None
-		tasks.wait_for_element = panel_never_fills
+		tasks.wait_for_element = lambda getter, timeout=10: getter()
 
 		output = self._report(tasks, "complete_bing_daily_set")
 
