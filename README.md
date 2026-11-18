@@ -52,6 +52,13 @@ poetry install
 eval $(poetry env activate)
 ```
 
+Alternatively, with [uv](https://docs.astral.sh/uv/), which installs the same dependencies into `.venv` and needs no activation step:
+
+```sh
+uv sync
+uv run src/main.py
+```
+
 You must also have a [webdriver for Microsoft Edge](https://learn.microsoft.com/en-us/microsoft-edge/webdriver/?tabs=c-sharp) installed. If you already have the Edge Browser installed, you probably have this component as well.
 
 ### Configuration Script
