@@ -39,3 +39,7 @@ class FakeDriver(FakeElement):
 
 	def __init__(self, children=None):
 		super().__init__(children=children)
+		self.page_load_timeout = None
+
+	def set_page_load_timeout(self, seconds):
+		self.page_load_timeout = seconds

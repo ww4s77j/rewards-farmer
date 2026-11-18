@@ -448,6 +448,15 @@ class ElementSelectionUtils:
 		counter = self.streak_tile_counter(self.get_open_visual_search_sidebar())
 		return counter is not None and counter[0] >= counter[1]
 
+	def daily_set_done_today(self, tile=None):
+		"""Whether the Daily Set tile already reports every activity done.
+
+		The tile carries the same `Activity: N/M` line the visual search tile
+		does; an unreadable counter means "not known to be done", never a skip.
+		"""
+		counter = self.streak_tile_counter(tile if tile is not None else self.get_open_daily_set_button())
+		return counter is not None and counter[0] >= counter[1]
+
 	def get_visual_search_sidebar(self):
 		"""Reject a positively different title, not an unverified title layout."""
 		titles = []
@@ -566,6 +575,34 @@ class ElementSelectionUtils:
 			return False
 
 		return Labels.CARD_COMPLETED in (status or "").lower()
+
+	# A card that asks the reader to install an app pays nothing to a run that
+	# cannot do that, and clicking it navigates away from the page. The wording
+	# is deliberately narrow: a verb and the word app, so an ordinary activity
+	# such as "Complete 3 searches to earn 10 points" never matches.
+	APP_PROMO_HOST = "bingapp.microsoft.com"
+	APP_PROMO_TEXT = re.compile(
+		r"\b(?:install|download|get)\b[^.]{0,60}\b(?:app|application)\b",
+		re.IGNORECASE,
+	)
+
+	def card_is_app_promo(self, card: WebElement):
+		"""Whether a card is an app-install promo rather than a Rewards activity."""
+		try:
+			href = card.get_dom_attribute("href") or ""
+		except StaleElementReferenceException:
+			href = ""
+
+		host = urlsplit(href).netloc.lower() if href else ""
+		if host == self.APP_PROMO_HOST or host.endswith("." + self.APP_PROMO_HOST):
+			return True
+
+		try:
+			description = self.extract_card_descriptions(card) or ""
+		except (NoSuchElementException, StaleElementReferenceException):
+			return False
+
+		return bool(self.APP_PROMO_TEXT.search(description))
 
 	def get_card_point_value(self, card: WebElement):
 		try:

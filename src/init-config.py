@@ -163,9 +163,16 @@ def configure_variables(f: TextIO):
 	else:
 		f.write("QUERY_SOURCE=llm\n")
 
-		llm_setup_type = one_of_with_default("Which LLM setup would you like to use? (Select 'local' for custom endpoints)", ["openrouter", "local"], "openrouter")
+		llm_setup_type = one_of_with_default("Which LLM setup would you like to use? (Select 'local' for custom endpoints)", ["deepseek", "openrouter", "local"], "deepseek")
 
-		if llm_setup_type == "openrouter":
+		if llm_setup_type == "deepseek":
+			f.write("LLM_PROVIDER=deepseek\n")
+			llm_api_key = input("Enter your DeepSeek API key (leave blank to read DEEPSEEK_API_KEY from the environment): ").strip()
+			llm_model = input("Enter the model name (default: deepseek-chat): ").strip() or "deepseek-chat"
+
+			f.write(f"DEEPSEEK_API_KEY={llm_api_key}\n")
+			f.write(f"DEEPSEEK_MODEL={llm_model}\n")
+		elif llm_setup_type == "openrouter":
 			f.write("LLM_PROVIDER=openrouter\n")
 			llm_api_key = input("Enter your OpenRouter API key: ").strip()
 			llm_model = input("Enter the model name (default: openrouter/free): ").strip() or "openrouter/free"

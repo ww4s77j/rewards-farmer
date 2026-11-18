@@ -11,3 +11,24 @@ __pycache__/
 .venv*
 /runs/
 !tests/fixtures/*.txt
+
+# Assistant-written notes and tooling, kept local
+HISTORY.md
+CLAUDE.md
+.claude/
+.agent/
+
+# Local environment files, may hold API keys; .env.example stays tracked
+.env.*
+!.env.example
+
+# Python build and test caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Local uv lockfile; leave it out so it cannot pin anyone else's resolution
+uv.lock

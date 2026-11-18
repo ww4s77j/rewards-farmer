@@ -262,7 +262,13 @@ class RewardsTaskUtils:
 	def complete_bing_daily_set(self, expected_activities: int = 3):
 		self.switch_to_earn_page()
 
-		self.wait_for_then_click(self.elements.get_open_daily_set_button)
+		opener = self.wait_for_element(self.elements.get_open_daily_set_button)
+
+		if self.elements.daily_set_done_today(opener):
+			logger.info("Daily set is already done for today")
+			return
+
+		self.move_to_and_click(opener)
 		self.progress = "opened the panel"
 
 		# The panel hydrates progressively, so the first non-empty snapshot can
@@ -330,19 +336,33 @@ class RewardsTaskUtils:
 			raise NoSuchElementException("no Explore on Bing section in this UI variant")
 
 		total = len(explore_on_bing_links)
-		self.progress = f"searched 0 of {total} cards"
+		pending = [
+			index for index, card in enumerate(explore_on_bing_links)
+			if not self.elements.card_is_complete(card) and not self.elements.card_is_app_promo(card)
+		]
 
-		for number in range(1, total + 1):
+		if not pending:
+			logger.info("Explore on Bing is already done for today")
+			return
+
+		self.progress = f"searched 0 of {total} cards"
+		searched = 0
+
+		for index in pending:
 			# Read again before every card. Coming back from the search tab
 			# re-renders the section, so a reference taken before the first
 			# search went stale: "searched 2 of 3 cards, then
 			# StaleElementReferenceException" (#102).
 			cards = self._explore_on_bing_cards()
 
-			if number > len(cards):
+			if index >= len(cards):
 				break
 
-			card = cards[number - 1]
+			card = cards[index]
+
+			if self.elements.card_is_complete(card) or self.elements.card_is_app_promo(card):
+				continue
+
 			desc = self.elements.extract_card_descriptions(card)
 			query = queries.search_query_for_task(desc)
 
@@ -360,12 +380,13 @@ class RewardsTaskUtils:
 			self.tab_utils.switch_to_other_tab()
 			self.tab_utils.close_all_other_tabs()
 
-			self.progress = f"searched {number} of {total} cards"
+			searched += 1
+			self.progress = f"searched {searched} of {total} cards"
 
 		time.sleep(random.uniform(1, 2)) # allow card statuses to update
 
 		for card in self._explore_on_bing_cards():
-			if not self.elements.card_is_complete(card):
+			if not self.elements.card_is_complete(card) and not self.elements.card_is_app_promo(card):
 				logger.warning(
 					"Explore on Bing Card [desc=%r] is not complete after searching. Please check manually.",
 					self.elements.extract_card_descriptions(card)
@@ -508,6 +529,10 @@ class RewardsTaskUtils:
 			try:
 				self.mouse.wheel_scroll_element_into_view(card)
 
+				if self.elements.card_is_app_promo(card):
+					self.progress = f"skipped app install promo {index + 1}"
+					continue
+
 				if not self.elements.card_is_complete(card) and self.elements.get_card_point_value(card) > 0:
 					self.move_to_and_click(card)
 
@@ -521,7 +546,8 @@ class RewardsTaskUtils:
 				continue
 
 		for card in self.elements.get_all_misc_cards():
-			if not self.elements.card_is_complete(card) and self.elements.get_card_point_value(card) > 0:
+			if (not self.elements.card_is_complete(card) and not self.elements.card_is_app_promo(card)
+					and self.elements.get_card_point_value(card) > 0):
 				logger.warning(
 					"Misc Card [desc=%r] is not complete after clicking. Please check manually.",
 					self.elements.extract_card_descriptions(card)

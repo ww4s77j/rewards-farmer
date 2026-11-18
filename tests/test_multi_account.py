@@ -244,6 +244,9 @@ class TestFailureIsolation(RunLoopTestCase):
 				if self.name == "two" and fail_at == "start":
 					raise exc
 
+			def set_page_load_timeout(self, seconds):
+				self.page_load_timeout = seconds
+
 			def quit(self):
 				if self.name == "two" and fail_at == "quit":
 					raise exc
